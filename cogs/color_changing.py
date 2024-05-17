@@ -2,8 +2,8 @@
 (c) 2024 Zachariah Michael Lagden (All Rights Reserved)
 You may not use, copy, distribute, modify, or sell this code without the express permission of the author.
 
-This cog counts the number of times a user has said the n-word in the server and provides a command to check the records,
-as well as a leaderboard command that shows the top 10 users with the most n-word records.
+This cog allows the user to change their color role.
+The available colors are purple, blue, green, hot pink, orange, red, yellow, and black.
 """
 
 # Third-party libraries
@@ -12,7 +12,7 @@ import discord
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
-from helpers.logs import RICKLOG, RICKLOG_CMDS
+from helpers.errors import handle_error
 
 
 class ColorChangingCog(commands.Cog):
@@ -80,7 +80,16 @@ class ColorChangingCog(commands.Cog):
 
     @color.error
     async def color_error(self, ctx, error):
-        print(error)
+        if isinstance(error, commands.MissingRequiredArgument):
+            embed = discord.Embed(
+                title="Error",
+                description="Please provide a color to change to.",
+                color=ERROR_EMBED_COLOR,
+            )
+            await ctx.reply(embed=embed, mention_author=False)
+
+        else:
+            await handle_error(ctx, error)
 
 
 async def setup(bot: commands.Bot):
