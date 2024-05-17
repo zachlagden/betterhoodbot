@@ -17,9 +17,6 @@ import discord
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 
-# Setup logger for this module
-logger = logging.getLogger("rickbot")
-
 
 class RoleCmdsCog(commands.Cog):
     """

@@ -6,9 +6,6 @@ This cog counts the number of times a user has said the n-word in the server and
 as well as a leaderboard command that shows the top 10 users with the most n-word records.
 """
 
-# Python standard library
-import logging
-
 # Third-party libraries
 from discord.ext import commands
 import discord
