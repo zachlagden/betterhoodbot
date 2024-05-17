@@ -16,7 +16,7 @@ import discord
 from db import messages_collection
 
 # Helper functions
-from helpers.logs import RICKLOG_CMDS
+from helpers.logs import RICKLOG_BG
 
 
 class MessagesCountCog(commands.Cog):
@@ -41,14 +41,14 @@ class MessagesCountCog(commands.Cog):
         if message.author.bot:
             return
 
-        RICKLOG_CMDS.debug(
+        RICKLOG_BG.debug(
             f"{message.author} sent a message, checking if they have been logged before..."
         )
 
         user_logger = messages_collection.find_one({"_id": message.author.id})
 
         if user_logger is None:
-            RICKLOG_CMDS.debug(
+            RICKLOG_BG.debug(
                 f"{message.author} has not been logged before, creating a new document..."
             )
             user_logger = {
@@ -57,7 +57,7 @@ class MessagesCountCog(commands.Cog):
             }
             messages_collection.insert_one(user_logger)
         else:
-            RICKLOG_CMDS.debug(
+            RICKLOG_BG.debug(
                 f"{message.author} has been logged before, incrementing their count..."
             )
             messages_collection.update_one(
