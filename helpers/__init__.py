@@ -1,3 +1,7 @@
+"""
+The helpers module contains all the helper functions and classes used in rickbot.
+"""
+
 """Import all modules that exist in the current directory."""
 # Ref https://stackoverflow.com/a/60861023/
 from importlib import import_module
