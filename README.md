@@ -1,7 +1,5 @@
 # Better Hood Bot - Based on [RickBot](https://github.com/zachlagden/rickbot).
 
----
-
 # Rickbot - The advanced discord.py framework.
 
 ## ![](https://i.zachlagden.uk/rickbot/cover.webp)
