@@ -235,15 +235,3 @@ class RickBot(commands.Bot):
                     f"Failed to send webhook message to channel {channel} on attempt ({str(attempt)}): {e}"
                 )
                 await asyncio.sleep(1)
-
-
-# To run the bot, create an instance of RickBot and call its start_bot method
-if __name__ == "__main__":
-    bot = RickBot()
-    loop = asyncio.get_event_loop()
-    for signal_name in ("SIGINT", "SIGTERM"):
-        loop.add_signal_handler(
-            getattr(signal, signal_name),
-            lambda: asyncio.create_task(bot.shutdown(signal_name)),
-        )
-    loop.run_until_complete(bot.start_bot())
