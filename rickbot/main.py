@@ -5,14 +5,11 @@ You may not use, copy, distribute, modify, or sell this code without the express
 This is the main application file for RickBot.
 """
 
-# Import the required modules
-
 # Python standard library
 from datetime import datetime
 import asyncio
 import logging
 import os
-import signal
 
 # Third-party libraries
 from termcolor import colored
@@ -65,11 +62,6 @@ class RickBot(commands.Bot):
         self.load_config()
 
     def setup_logging(self):
-        # Set the working directory to the directory of this file
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-        os.chdir(dname)
-        # Set up the logging
         setup_discord_logging(logging.INFO)
 
     def load_config(self):
@@ -77,6 +69,17 @@ class RickBot(commands.Bot):
             RICKLOG.setLevel(logging.DEBUG)
         else:
             RICKLOG.setLevel(logging.INFO)
+
+    async def setup_hook(self):
+        await self.load_cogs()
+
+    async def load_cogs(self):
+        cog_folder = "cogs"
+        for filename in os.listdir(cog_folder):
+            if filename.endswith(".py") and not filename.startswith("_"):
+                cog_name = f"{cog_folder}.{filename[:-3]}"
+                await self.load_extension(cog_name)
+                RICKLOG_MAIN.info(f"Loaded cog: {cog_name}")
 
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=RickContext)
