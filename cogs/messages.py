@@ -7,7 +7,6 @@ This cog is responsible for tracking the number of messages sent by users and as
 
 # Python standard library
 from typing import Union
-import logging
 
 # Third-party libraries
 from discord.ext import commands
@@ -16,8 +15,8 @@ import discord
 # Import database
 from db import messages_collection
 
-# Setup logger for this module
-RICKLOG = logging.getLogger("rickbot")
+# Helper functions
+from helpers.logs import RICKLOG_CMDS
 
 
 class MessagesCountCog(commands.Cog):
@@ -42,14 +41,14 @@ class MessagesCountCog(commands.Cog):
         if message.author.bot:
             return
 
-        RICKLOG.debug(
+        RICKLOG_CMDS.debug(
             f"{message.author} sent a message, checking if they have been logged before..."
         )
 
         user_logger = messages_collection.find_one({"_id": message.author.id})
 
         if user_logger is None:
-            RICKLOG.debug(
+            RICKLOG_CMDS.debug(
                 f"{message.author} has not been logged before, creating a new document..."
             )
             user_logger = {
@@ -58,7 +57,7 @@ class MessagesCountCog(commands.Cog):
             }
             messages_collection.insert_one(user_logger)
         else:
-            RICKLOG.debug(
+            RICKLOG_CMDS.debug(
                 f"{message.author} has been logged before, incrementing their count..."
             )
             messages_collection.update_one(
