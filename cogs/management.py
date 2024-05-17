@@ -7,8 +7,6 @@ as well as a leaderboard command that shows the top 10 users with the most n-wor
 """
 
 # Python standard library
-import logging
-from re import sub
 import subprocess
 
 # Third-party libraries
@@ -18,9 +16,6 @@ import discord
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
-
-# Setup logger for this module
-RICKLOG = logging.getLogger("rickbot")
 
 
 class ManagementCog(commands.Cog):

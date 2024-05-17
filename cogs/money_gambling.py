@@ -9,21 +9,16 @@ This cog is responsible for the gambling commands in the bot.
 
 # Python Standard Library
 from discord.ext import commands
-from typing import Union
 import discord
 import logging
 import random
 
-# Import database
-from db import money_collection
-
 # Helper functions
-from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
 from helpers.errors import handle_error
 from helpers.money import (
     user_balance,
     format_money,
-    format_time,
     log_money_transaction,
     DatabaseImpossibleError,
 )
