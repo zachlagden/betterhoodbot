@@ -6,7 +6,6 @@ This cog is responsible for the role commands in the bot.
 """
 
 # Python standard library
-import logging
 from typing import Union
 
 # Third-party libraries
@@ -18,7 +17,7 @@ import discord
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 
 
-class RoleCmdsCog(commands.Cog):
+class Utils_RoleCommand(commands.Cog):
     """
     Commands cog for managing Discord roles.
     """
@@ -129,4 +128,4 @@ class RoleCmdsCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     """Setup the cog."""
-    await bot.add_cog(RoleCmdsCog(bot))
+    await bot.add_cog(Utils_RoleCommand(bot))
