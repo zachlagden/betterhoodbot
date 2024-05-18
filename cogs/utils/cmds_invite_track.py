@@ -2,12 +2,12 @@ import discord
 from discord.ext import commands
 
 # Helper functions and constants
-from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 from db import invites_collection
 
 
-class InviteTrackerCog(commands.Cog):
+class Utils_InviteTrackerCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.invites_cache = {}
@@ -92,6 +92,24 @@ class InviteTrackerCog(commands.Cog):
 
         await ctx.reply(embed=embed, mention_author=False)
 
+    @how_joined.error
+    async def how_joined_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="Please enter a valid user.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            embed.add_field(
+                "Usage", f"```{ctx.prefix}how_joined [@user]```", inline=False
+            )
+            embed.set_footer(text="Invite Tracker")
+
+            await ctx.reply(embed=embed, mention_author=False)
+        else:
+            await handle_error(ctx, error)
+
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(InviteTrackerCog(bot))
+    await bot.add_cog(Utils_InviteTrackerCommands(bot))
