@@ -20,6 +20,7 @@ from db import money_collection
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.errors import handle_error
 from helpers.custom.money import (
     user_balance,
     format_money,
@@ -64,6 +65,20 @@ class MoneyCog(commands.Cog):
         embed.set_footer(text="Better Hood Money")
         await ctx.message.reply(embed=embed, mention_author=False)
 
+    @_balance.error
+    async def _balance_error(self, ctx: commands.Context, error):
+        """Handles errors for the balance command."""
+        if isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid user specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+        else:
+            await handle_error(ctx, error)
+
     @commands.command(name="deposit", aliases=["dep"])
     async def _deposit(self, ctx: commands.Context, amount: int):
         """Deposits money from the wallet to the bank."""
@@ -106,19 +121,29 @@ class MoneyCog(commands.Cog):
 
     @_deposit.error
     async def _deposit_error(self, ctx: commands.Context, error):
-        """Handles errors for the deposit command."""
         if isinstance(error, commands.MissingRequiredArgument):
-            description = "Please specify an amount to deposit."
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="Please specify an amount to deposit.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            embed.add_field(name="Usage", value=f"```{ctx.prefix}deposit <amount>```")
+
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         elif isinstance(error, commands.BadArgument):
-            description = "Invalid amount specified."
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid amount specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         else:
-            description = str(error)
-        embed = discord.Embed(
-            title="Error", description=description, color=ERROR_EMBED_COLOR
-        )
-        embed.set_footer(text="Better Hood Money")
-        await ctx.message.reply(embed=embed, mention_author=False)
-        logging.exception("Error during deposit command", exc_info=error)
+            await handle_error(ctx, error)
 
     @commands.command(name="withdraw", aliases=["with"])
     async def _withdraw(self, ctx: commands.Context, amount: int):
@@ -162,19 +187,29 @@ class MoneyCog(commands.Cog):
 
     @_withdraw.error
     async def _withdraw_error(self, ctx: commands.Context, error):
-        """Handles errors for the withdraw command."""
         if isinstance(error, commands.MissingRequiredArgument):
-            description = "Please specify an amount to withdraw."
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="Please specify an amount to withdraw.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            embed.add_field(name="Usage", value=f"```{ctx.prefix}withdraw <amount>```")
+
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         elif isinstance(error, commands.BadArgument):
-            description = "Invalid amount specified."
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid amount specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         else:
-            description = str(error)
-        embed = discord.Embed(
-            title="Error", description=description, color=ERROR_EMBED_COLOR
-        )
-        embed.set_footer(text="Better Hood Money")
-        await ctx.message.reply(embed=embed, mention_author=False)
-        logging.exception("Error during withdraw command", exc_info=error)
+            await handle_error(ctx, error)
 
     @commands.command(name="give", aliases=["pay"])
     @commands.cooldown(1, 60, commands.BucketType.user)
@@ -222,35 +257,49 @@ class MoneyCog(commands.Cog):
 
     @_give.error
     async def _give_error(self, ctx: commands.Context, error):
-        """Handles errors for the give command."""
         if isinstance(error, commands.CommandOnCooldown):
-            description = f"You've already given someone money recently. Try again in {format_time(int(error.retry_after))}."
+            embed = discord.Embed(
+                title="Error",
+                description=f"You've already given money recently. Try again in {format_time(int(error.retry_after))}.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         elif isinstance(error, commands.MissingRequiredArgument):
-            if (
-                "member" in ctx.command.clean_params
-                and ctx.command.clean_params["member"].default
-                == ctx.command.clean_params["member"]
-            ):
-                description = "Please mention the user you would like to give money to."
-            elif (
-                "amount" in ctx.command.clean_params
-                and ctx.command.clean_params["amount"].default
-                == ctx.command.clean_params["amount"]
-            ):
-                description = "Please enter the amount you would like to give."
-            else:
-                description = "Please enter valid command parameters."
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="Please specify a user and an amount to give.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            embed.add_field(
+                name="Usage", value=f"```{ctx.prefix}give <@user> <amount>```"
+            )
+
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         elif isinstance(error, commands.BadArgument):
-            description = "Invalid argument provided."
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid user or amount specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         else:
-            description = str(error)
-        embed = discord.Embed(
-            title="Error", description=description, color=ERROR_EMBED_COLOR
-        )
-        embed.set_footer(text="Better Hood Money")
-        await ctx.message.reply(embed=embed, mention_author=False)
-        ctx.command.reset_cooldown(ctx)
-        logging.exception("Error during give command", exc_info=error)
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            await handle_error(ctx, error)
 
     @commands.command(name="transfer", aliases=["send"])
     @commands.cooldown(1, 300, commands.BucketType.user)
@@ -347,23 +396,55 @@ class MoneyCog(commands.Cog):
 
     @_transfer.error
     async def _transfer_error(self, ctx: commands.Context, error):
-        """Handles errors for the transfer command."""
         if isinstance(error, commands.CommandOnCooldown):
-            description = f"You've already made a transfer recently. Try again in {format_time(int(error.retry_after))}."
+            embed = discord.Embed(
+                title="Error",
+                description=f"You've already transferred money recently. Try again in {format_time(int(error.retry_after))}.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
+        elif isinstance(error, commands.MissingRequiredArgument):
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="Please specify a user and an amount to transfer.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            embed.add_field(
+                name="Usage", value=f"```{ctx.prefix}transfer <@user> <amount>```"
+            )
+
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
+        elif isinstance(error, commands.BadArgument):
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid user or amount specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         else:
-            description = str(error)
-        embed = discord.Embed(
-            title="Error", description=description, color=ERROR_EMBED_COLOR
-        )
-        embed.set_footer(text="Better Hood Money")
-        await ctx.message.reply(embed=embed, mention_author=False)
-        ctx.command.reset_cooldown(ctx)
-        logging.exception("Error during transfer command", exc_info=error)
+            # Because the error is raised, we can clear the user's cooldown
+            ctx.command.reset_cooldown(ctx)
+
+            await handle_error(ctx, error)
 
     @commands.command(name="daily")
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def _daily(self, ctx: commands.Context):
         """Grants a daily monetary reward to the user."""
+        # TODO: pretty sure the cooldown (DB) is not working
         lookup = money_collection.find_one({"_id": ctx.author.id})
         user = lookup if lookup else {}
         if "last_daily" in user:
