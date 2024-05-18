@@ -26,28 +26,22 @@ from helpers.logs import RICKLOG_MAIN
 # Config
 from config import CONFIG
 
-PASTEBIN_API_KEY = CONFIG["pastebin"]["api_key"]
-PASTEBIN_API_URL = "https://pastebin.com/api/api_post.php"
+
+PASTE_BASE_URL = "https://paste.zachlagden.uk"
+PASTE_DOCUMENTS_URL = f"{PASTE_BASE_URL}/documents"
 
 
-def upload_to_pastebin(error_file_path):
+def upload_to_paste(error_file_path):
     with open(error_file_path, "r") as file:
         content = file.read()
 
-    data = {
-        "api_dev_key": PASTEBIN_API_KEY,
-        "api_option": "paste",
-        "api_paste_code": content,
-        "api_paste_private": "1",  # 0=public, 1=unlisted, 2=private
-        "api_paste_name": os.path.basename(error_file_path),
-        "api_paste_expire_date": "10M",  # Expire in 10 minutes
-    }
+    response = requests.post(PASTE_DOCUMENTS_URL, data=content)
 
-    response = requests.post(PASTEBIN_API_URL, data=data)
     if response.status_code == 200:
-        return response.text
+        return f"{PASTE_BASE_URL}/{response.json()['key']}"
     else:
-        RICKLOG_MAIN.error(f"Failed to upload to Pastebin: {response.status_code}")
+        RICKLOG_MAIN.critical(f"Failed to upload to Paste: {response.status_code}")
+        RICKLOG_MAIN.exception(response.text)
         return None
 
 
@@ -138,8 +132,6 @@ async def handle_error(ctx: commands.Context, error: Exception):
 
         embed.set_footer(text="RickBot Error Logging")
 
-        await ctx.reply(embed=embed, mention_author=False)
-
         # This is a serious error, log it in the errors directory
 
         # Ensure the errors directory exists
@@ -162,7 +154,7 @@ async def handle_error(ctx: commands.Context, error: Exception):
 
         with open(error_file, "w+") as f:
             f.write(
-                "Hello! An error occurred during the running of RickBot. This is most likely a serious error, so please investigate it. If you find this errors has occurred due to an issue with the original code, please contact the developer. Otherwise, you're on your own. Good luck!\n\n"
+                "Hello! An error occurred during the running of RickBot.\nThis is most likely a serious error, so please investigate it.\nIf you find this errors has occurred due to an issue with the original code, please contact the developer.\nOtherwise, you're on your own. Good luck!\n\n"
             )
             f.write(f"Error: {error}\n")
             f.write(f"Error ID: {error_id}\n")
@@ -174,19 +166,21 @@ async def handle_error(ctx: commands.Context, error: Exception):
             f.write(f"Time: {datetime.now()}\n")
             f.write(f"Stack Trace: {error.original}\n")
             f.write(
-                "\n\n----------------------------------------------------\nTraceback\n----------------------------------------------------\n\n"
+                "\n\n----------------------------------------------------\nTraceback\n----------------------------------------------------\n\n\n"
             )
             f.write(traceback.format_exc())
 
-        pastebin_link = upload_to_pastebin(error_file)
+        paste_link = upload_to_paste(error_file)
 
-        if pastebin_link:
+        if paste_link:
             embed.add_field(
                 name="Error Log",
-                value=f"[View on Pastebin]({pastebin_link})",
+                value=f"[View as Paste]({paste_link})",
                 inline=False,
             )
 
-        RICKLOG_MAIN.error(
-            f"An error occurred while running the command: {error}\nError log created at {error_file}"
-        )
+        await ctx.reply(embed=embed, mention_author=False)
+
+        RICKLOG_MAIN.error(f"An error occurred while running the command: {error}")
+        RICKLOG_MAIN.error(f"Error log created at {error_file}")
+        RICKLOG_MAIN.error(f"Paste link: {paste_link}")
