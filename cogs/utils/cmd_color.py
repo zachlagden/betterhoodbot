@@ -15,7 +15,7 @@ from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 
 
-class ColorChangingCog(commands.Cog):
+class Utils_ColorCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -82,10 +82,24 @@ class ColorChangingCog(commands.Cog):
     async def color_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             embed = discord.Embed(
-                title="Error",
-                description="Please provide a color to change to.",
+                title="Invalid Usage",
+                description="Please specify a color.",
                 color=ERROR_EMBED_COLOR,
             )
+
+            embed.add_field(name="Usage", value=f"```{ctx.prefix}color <color>```")
+            embed.set_footer(text="Color Command")
+
+            await ctx.reply(embed=embed, mention_author=False)
+
+        elif isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                title="Error",
+                description="Invalid color specified.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Color Command")
+
             await ctx.reply(embed=embed, mention_author=False)
 
         else:
@@ -93,4 +107,4 @@ class ColorChangingCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(ColorChangingCog(bot))
+    await bot.add_cog(Utils_ColorCommand(bot))
