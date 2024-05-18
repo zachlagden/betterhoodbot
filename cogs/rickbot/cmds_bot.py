@@ -17,13 +17,16 @@ import discord
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 
+# Config
+from config import CONFIG
+
 
 class ManagementCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     def botownercheck(ctx):
-        return ctx.author.id in [1153810697021554828]
+        return ctx.author.id in CONFIG["devs"]
 
     @commands.command()
     @commands.check(botownercheck)
