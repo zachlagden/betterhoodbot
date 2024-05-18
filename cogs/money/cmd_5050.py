@@ -2,7 +2,7 @@
 (c) 2024 Zachariah Michael Lagden (All Rights Reserved)
 You may not use, copy, distribute, modify, or sell this code without the express permission of the author.
 
-This cog is responsible for the gambling commands in the bot.
+This cog is for the 5050 command, which allows users to gamble a specified amount of money with a 50% chance to double it.
 """
 
 # Imports
@@ -26,14 +26,9 @@ from helpers.custom.money import (
 RICKLOG = logging.getLogger("rickbot")
 
 
-class MoneyGamblingCog(commands.Cog):
+class Money_5050Command(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    def create_embed(self, title: str, description: str, color: int) -> discord.Embed:
-        embed = discord.Embed(title=title, description=description, color=color)
-        embed.set_footer(text="Better Hood Money")
-        return embed
 
     @commands.command(name="5050")
     async def _5050(self, ctx: commands.Context, amount: int):
@@ -42,10 +37,15 @@ class MoneyGamblingCog(commands.Cog):
         """
         # Ensure amount is positive
         if amount <= 0:
-            embed = self.create_embed(
-                "Invalid Amount", "Please enter a positive amount.", ERROR_EMBED_COLOR
+            embed = discord.Embed(
+                title="Invalid Amount",
+                description="Please enter a positive number.",
+                color=ERROR_EMBED_COLOR,
             )
-            return await ctx.send(embed=embed)
+            embed.set_footer(text="Better Hood Money")
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+            return
 
         query = user_balance(ctx.author.id)
         if query:
@@ -54,15 +54,18 @@ class MoneyGamblingCog(commands.Cog):
             raise DatabaseImpossibleError("User balance query failed.")
 
         if wallet < amount:
-            embed = self.create_embed(
-                "Insufficient Funds",
-                f"You do not have enough money to gamble ${amount:,}.",
-                ERROR_EMBED_COLOR,
+            embed = discord.Embed(
+                title="Insufficient Funds",
+                description="You do not have enough money in your wallet to gamble that amount.",
+                color=ERROR_EMBED_COLOR,
             )
-            return await ctx.send(embed=embed)
+            embed.set_footer(text="Better Hood Money")
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+            return
 
         # Calculate the result
-        if random.choice([True, False]):  # Simplified random result calculation
+        if random.choice([True, False]):
             adjust_amount = amount * 2
             adjust_wallet = adjust_amount
             result_text = f"You won {format_money(adjust_amount)}! It's been added to your wallet."
@@ -97,28 +100,39 @@ class MoneyGamblingCog(commands.Cog):
         # Update balance
         user_balance(ctx.author.id, adjust_wallet=adjust_wallet)
 
-        embed = self.create_embed("Game Result", result_text, color)
-        await ctx.send(embed=embed)
+        embed = discord.Embed(
+            title="5050",
+            description=result_text,
+            color=color,
+        )
+
+        await ctx.message.reply(embed=embed, mention_author=False)
 
     @_5050.error
     async def _5050_error(self, ctx: commands.Context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
-            embed = self.create_embed(
-                "Missing Argument",
-                "Please enter the amount you would like to gamble.",
-                ERROR_EMBED_COLOR,
+            embed = discord.Embed(
+                title="Invalid Usage",
+                description="You need to specify the amount of money you want to gamble.",
+                color=ERROR_EMBED_COLOR,
             )
-            await ctx.send(embed=embed)
+            embed.add_field(name="Usage", value=f"```{ctx.prefix}5050 <amount>```")
+            embed.set_footer(text="Better Hood Money")
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         elif isinstance(error, commands.BadArgument):
-            embed = self.create_embed(
-                "Invalid Argument",
-                "Please enter a valid number.",
-                ERROR_EMBED_COLOR,
+            embed = discord.Embed(
+                title="Invalid Amount",
+                description="Please enter a valid number.",
+                color=ERROR_EMBED_COLOR,
             )
-            await ctx.send(embed=embed)
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+
         else:
             await handle_error(ctx, error)
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(MoneyGamblingCog(bot))
+    await bot.add_cog(Money_5050Command(bot))

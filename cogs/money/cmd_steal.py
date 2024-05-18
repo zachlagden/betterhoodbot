@@ -2,11 +2,10 @@
 (c) 2024 Zachariah Michael Lagden (All Rights Reserved)
 You may not use, copy, distribute, modify, or sell this code without the express permission of the author.
 
-This cog is responsible for the money interactions commands in the bot.
+This cog is for the steal command, which allows users to steal money from other users with a chance of success or failure.
 """
 
 # Python standard library
-import logging
 import random
 
 # Third-party libraries
@@ -24,31 +23,24 @@ from helpers.custom.money import (
     log_money_transaction,
 )
 
-# Setup logger for this module
-RICKLOG = logging.getLogger("rickbot")
 
-
-class MoneyInteractionsCog(commands.Cog):
+class Money_StealCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    def create_embed(self, title: str, description: str, color: int) -> discord.Embed:
-        embed = discord.Embed(title=title, description=description, color=color)
-        embed.set_footer(text="Better Hood Money")
-        return embed
 
     @commands.command(name="steal", aliases=["rob"])
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def _steal(self, ctx: commands.Context, member: discord.Member):
         if member == ctx.author:
-            await ctx.message.reply(
-                embed=self.create_embed(
-                    "Error", "You cannot steal from yourself!", ERROR_EMBED_COLOR
-                ),
-                mention_author=False,
+            embed = discord.Embed(
+                title="Error",
+                description="You can't steal from yourself.",
+                color=ERROR_EMBED_COLOR,
             )
+            embed.set_footer(text="Better Hood Money")
 
-            ctx.command.reset_cooldown(ctx)  # type: ignore
+            await ctx.message.reply(embed=embed, mention_author=False)
+            ctx.command.reset_cooldown(ctx)
             return
 
         success_chance = random.randint(1, 100)
@@ -62,52 +54,51 @@ class MoneyInteractionsCog(commands.Cog):
             raise DatabaseImpossibleError("User balance query failed.")
 
         if stealer_wallet < 500:
-            await ctx.message.reply(
-                embed=self.create_embed(
-                    "Error",
-                    "You need at least $500 in your wallet to steal.",
-                    ERROR_EMBED_COLOR,
-                ),
-                mention_author=False,
+            embed = discord.Embed(
+                title="Error",
+                description="You need at least $500 in your wallet to steal.",
+                color=ERROR_EMBED_COLOR,
             )
+            embed.set_footer(text="Better Hood Money")
 
-            ctx.command.reset_cooldown(ctx)  # type: ignore
+            await ctx.message.reply(embed=embed, mention_author=False)
+            ctx.command.reset_cooldown(ctx)
             return
+
         elif victim_wallet < 500:
-            await ctx.message.reply(
-                embed=self.create_embed(
-                    "Error",
-                    "The victim needs at least $500 in their wallet to steal.",
-                    ERROR_EMBED_COLOR,
-                ),
-                mention_author=False,
+            embed = discord.Embed(
+                title="Error",
+                description="The victim needs at least $500 in their wallet to steal.",
+                color=ERROR_EMBED_COLOR,
             )
+            embed.set_footer(text="Better Hood Money")
 
-            ctx.command.reset_cooldown(ctx)  # type: ignore
+            await ctx.message.reply(embed=embed, mention_author=False)
+            ctx.command.reset_cooldown(ctx)
             return
+
         elif stealer_bank < 1000:
-            await ctx.message.reply(
-                embed=self.create_embed(
-                    "Error",
-                    "You need at least $1,000 in your bank to steal.",
-                    ERROR_EMBED_COLOR,
-                ),
-                mention_author=False,
+            embed = discord.Embed(
+                title="Error",
+                description="You need at least $1,000 in your bank to steal.",
+                color=ERROR_EMBED_COLOR,
             )
+            embed.set_footer(text="Better Hood Money")
 
-            ctx.command.reset_cooldown(ctx)  # type: ignore
+            await ctx.message.reply(embed=embed, mention_author=False)
+            ctx.command.reset_cooldown(ctx)
             return
-        elif victim_bank < 1000:
-            await ctx.message.reply(
-                embed=self.create_embed(
-                    "Error",
-                    "The victim needs at least $1,000 in their bank to steal.",
-                    ERROR_EMBED_COLOR,
-                ),
-                mention_author=False,
-            )
 
-            ctx.command.reset_cooldown(ctx)  # type: ignore
+        elif victim_bank < 1000:
+            embed = discord.Embed(
+                title="Error",
+                description="The victim needs at least $1,000 in their bank to steal.",
+                color=ERROR_EMBED_COLOR,
+            )
+            embed.set_footer(text="Better Hood Money")
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+            ctx.command.reset_cooldown(ctx)
             return
 
         if success_chance <= 30:  # 30% chance of success
@@ -146,11 +137,13 @@ class MoneyInteractionsCog(commands.Cog):
 
             situation = random.choice(situations)
 
-            reply_embed = self.create_embed(
-                "Successful Steal!",
-                f"You successfully stole {format_money(stolen_amount)} by {situation}.",
-                SUCCESS_EMBED_COLOR,
+            reply_embed = discord.Embed(
+                title="Success!",
+                description=f"You successfully stole {format_money(stolen_amount)} {situation}.",
+                color=SUCCESS_EMBED_COLOR,
             )
+            reply_embed.set_footer(text="Better Hood Money")
+
             await ctx.message.reply(embed=reply_embed, mention_author=False)
 
         else:  # Consequences if the steal fails
@@ -188,11 +181,13 @@ class MoneyInteractionsCog(commands.Cog):
                     ],
                 )
 
-                reply_embed = self.create_embed(
-                    "Caught!",
-                    f"Caught! You lost {format_money(lost_amount)} from your wallet {fail_situation}.",
-                    ERROR_EMBED_COLOR,
+                reply_embed = discord.Embed(
+                    title="Failed!",
+                    description=f"You failed to steal and lost {format_money(lost_amount)} {fail_situation}.",
+                    color=ERROR_EMBED_COLOR,
                 )
+                reply_embed.set_footer(text="Better Hood Money")
+
                 await ctx.message.reply(embed=reply_embed, mention_author=False)
 
             elif success_chance <= 90:  # 40% chance of being caught by the victim
@@ -210,11 +205,13 @@ class MoneyInteractionsCog(commands.Cog):
                     ],
                 )
 
-                reply_embed = self.create_embed(
-                    "Caught by Victim!",
-                    "Caught by the victim! They took all the money in your wallet.",
-                    ERROR_EMBED_COLOR,
+                reply_embed = discord.Embed(
+                    title="Caught by Victim!",
+                    description=f"Caught by the victim! You've lost all your wallet money.",
+                    color=ERROR_EMBED_COLOR,
                 )
+                reply_embed.set_footer(text="Better Hood Money")
+
                 await ctx.message.reply(embed=reply_embed, mention_author=False)
 
             else:  # 10% chance of being caught by the police
@@ -238,45 +235,60 @@ class MoneyInteractionsCog(commands.Cog):
                     ],
                 )
 
-                reply_embed = self.create_embed(
-                    "Caught by Police!",
-                    f"Caught by the police! You've lost all your wallet money and {format_money(bank_penalty)} from your bank.",
-                    ERROR_EMBED_COLOR,
+                reply_embed = discord.Embed(
+                    title="Caught by Police!",
+                    description=f"Caught by the police! You've lost all your wallet money and fined ${format_money(bank_penalty)}.",
+                    color=ERROR_EMBED_COLOR,
                 )
+                reply_embed.set_footer(text="Better Hood Money")
+
                 await ctx.message.reply(embed=reply_embed, mention_author=False)
 
     @_steal.error
     async def _steal_error(self, ctx: commands.Context, error: commands.CommandError):
         if isinstance(error, commands.CommandOnCooldown):
-            reply_embed = self.create_embed(
-                "Error",
-                f"You can steal again in {format_time(round(error.retry_after))}.",
-                ERROR_EMBED_COLOR,
+            reply_embed = discord.Embed(
+                title="Error",
+                description=f"You're on cooldown. Try again in {format_time(error.retry_after)}.",
+                color=ERROR_EMBED_COLOR,
             )
+            reply_embed.set_footer(text="Better Hood Money")
+
             await ctx.message.reply(embed=reply_embed, mention_author=False)
 
-        else:
-            ctx.command.reset_cooldown(ctx)  # type: ignore
-
-        if isinstance(error, commands.MissingRequiredArgument):
-            reply_embed = self.create_embed(
-                "Error",
-                "Please mention the user you would like to steal from.",
-                ERROR_EMBED_COLOR,
+        elif isinstance(error, commands.MissingRequiredArgument):
+            reply_embed = discord.Embed(
+                title="Invalid Usage",
+                description="You need to mention a user to steal from.",
+                color=ERROR_EMBED_COLOR,
             )
+
+            reply_embed.add_field(
+                name="Usage", value=f"```{ctx.prefix}steal <@user>```"
+            )
+
+            reply_embed.set_footer(text="Better Hood Money")
+
+            ctx.command.reset_cooldown(ctx)
             await ctx.message.reply(embed=reply_embed, mention_author=False)
 
         elif isinstance(error, commands.BadArgument):
-            reply_embed = self.create_embed(
-                "Error",
-                "Please mention a valid user.",
-                ERROR_EMBED_COLOR,
+            reply_embed = discord.Embed(
+                title="Invalid User",
+                description="Please mention a valid user.",
+                color=ERROR_EMBED_COLOR,
             )
+
+            reply_embed.set_footer(text="Better Hood Money")
+
+            ctx.command.reset_cooldown(ctx)
             await ctx.message.reply(embed=reply_embed, mention_author=False)
 
         else:
+            ctx.command.reset_cooldown(ctx)
+
             await handle_error(ctx, error)
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(MoneyInteractionsCog(bot))
+    await bot.add_cog(Money_StealCommand(bot))
