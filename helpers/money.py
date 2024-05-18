@@ -1,16 +1,30 @@
-# Imports
+"""
+(c) 2024 Zachariah Michael Lagden (All Rights Reserved)
+You may not use, copy, distribute, modify, or sell this code without the express permission of the author.
+
+This is a helper for money-related functions.
+"""
+
+# Import the required modules
+
+# Python standard library
 from datetime import datetime
-from db import money_collection
 from typing import Union
+
+# Third-party libraries
 import discord
 import aiohttp
 
+# Helpers
+from helpers.colors import MAIN_EMBED_COLOR
+from helpers.logs import RICKLOG_HELPERS
+
+# Database
+from db import money_collection
+
 # Constants
 
-TRANSACTION_LOG_WEBHOOK = "https://discord.com/api/webhooks/1238086897671208970/QdnFSb1sRPR3mEKHe7bEmcxAtvhov-XZFfRJs-_nZkOF_k_Z1IZ55p6bTnEPHVn0CxKp"
-MAIN_EMBED_COLOR = 0x6D28D9
-ERROR_EMBED_COLOR = 0x7C1719
-SUCCESS_EMBED_COLOR = 0x1E8449
+TRANSACTION_LOG_WEBHOOK = "https://discord.com/api/webhooks/1241260726778069052/cTlDzHXTXEDgyF981rqRhJmemLsamAnXC3Y2z0XCSs2XGSDfAtdx1j9uNsog5foLfJPz"
 
 # Error Classes
 
@@ -18,13 +32,17 @@ SUCCESS_EMBED_COLOR = 0x1E8449
 class DatabaseImpossibleError(Exception):
     """Raised when an error that should'nt be possible occurs in the database."""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message)
+        RICKLOG_HELPERS.critical(f"Database Impossible Error: {message}")
 
 
 class MoneyTransactionLogError(Exception):
     """Raised when a money transaction log fails."""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(message)
+        RICKLOG_HELPERS.critical(f"Money Transaction Log Error: {message}")
 
 
 # Functions
