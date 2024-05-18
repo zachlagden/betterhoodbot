@@ -31,6 +31,11 @@ class Money_StealCommand(commands.Cog):
     @commands.command(name="steal", aliases=["rob"])
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def _steal(self, ctx: commands.Context, member: discord.Member):
+        await ctx.message.reply(
+            "This command is currently disabled.", mention_author=False
+        )
+        return
+
         if member == ctx.author:
             embed = discord.Embed(
                 title="Error",

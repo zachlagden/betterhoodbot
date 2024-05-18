@@ -60,7 +60,18 @@ class Money_GiveCommand(commands.Cog):
 
         user_balance(ctx.author.id, adjust_wallet=-amount)
         user_balance(member.id, adjust_wallet=amount)
-        await log_money_transaction(ctx.author.id, member.id, amount, "Give")
+
+        await log_money_transaction(
+            [
+                {
+                    "users": {"from": ctx.author, "to": member},
+                    "movement": {"from": "wallet", "to": "wallet"},
+                    "amount": amount,
+                    "reason": "Gift",
+                }
+            ]
+        )
+
         embed = discord.Embed(
             title="Success",
             description=f"You have successfully given {format_money(amount)} to {member.display_name}.",

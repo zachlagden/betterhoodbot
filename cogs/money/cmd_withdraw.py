@@ -60,7 +60,18 @@ class Money_WithdrawCommand(commands.Cog):
             return
 
         user_balance(ctx.author.id, adjust_wallet=amount, adjust_bank=-amount)
-        await log_money_transaction(ctx.author.id, ctx.author.id, amount, "Withdrawal")
+
+        await log_money_transaction(
+            [
+                {
+                    "users": {"from": ctx.author.id, "to": ctx.author.id},
+                    "movement": {"from": "bank", "to": "wallet"},
+                    "amount": amount,
+                    "reason": "Withdrawal",
+                }
+            ]
+        )
+
         embed = discord.Embed(
             title="Success",
             description=f"You have successfully withdrawn {format_money(amount)}.",

@@ -91,9 +91,18 @@ class Money_TransferCommand(commands.Cog):
             if str(reaction.emoji) == "✅":
                 user_balance(ctx.author.id, adjust_bank=-amount)
                 user_balance(member.id, adjust_bank=net_amount)
+
                 await log_money_transaction(
-                    ctx.author.id, member.id, net_amount, "Transfer"
+                    [
+                        {
+                            "users": {"from": ctx.author, "to": member},
+                            "movement": {"from": "bank", "to": "bank"},
+                            "amount": amount,
+                            "reason": "Transfer",
+                        }
+                    ]
                 )
+
                 confirmation_embed = discord.Embed(
                     title="Transfer Successful",
                     description=f"Successfully transferred {format_money(net_amount)} to {member.display_name} after a {format_money(tax)} tax deduction.",

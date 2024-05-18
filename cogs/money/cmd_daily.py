@@ -56,9 +56,18 @@ class Money_DailyCommand(commands.Cog):
             )
 
         user_balance(ctx.author.id, adjust_bank=10000)
+
         await log_money_transaction(
-            self.bot.user.id, ctx.author.id, 10000, "Daily Reward"
+            [
+                {
+                    "users": {"from": ctx.bot.user, "to": ctx.author},
+                    "movement": {"from": "bank", "to": "wallet"},
+                    "amount": 10000,
+                    "reason": "Daily Reward",
+                }
+            ]
         )
+
         embed = discord.Embed(
             title="Daily Reward",
             description="You have successfully claimed your daily reward of $10000. It is available in your bank.",

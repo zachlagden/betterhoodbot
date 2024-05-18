@@ -57,7 +57,18 @@ class Money_DepositCommand(commands.Cog):
             return
 
         user_balance(ctx.author.id, adjust_bank=amount, adjust_wallet=-amount)
-        await log_money_transaction(ctx.author.id, ctx.author.id, amount, "Deposit")
+
+        await log_money_transaction(
+            [
+                {
+                    "users": {"from": ctx.author, "to": ctx.author},
+                    "movement": {"from": "wallet", "to": "bank"},
+                    "amount": amount,
+                    "reason": "Deposit",
+                }
+            ]
+        )
+
         embed = discord.Embed(
             title="Success",
             description=f"You have successfully deposited {format_money(amount)}.",
