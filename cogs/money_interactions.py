@@ -16,12 +16,12 @@ import discord
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
 from helpers.errors import handle_error
-from helpers.money import (
+from helpers.custom.money import (
     user_balance,
     format_money,
     format_time,
     DatabaseImpossibleError,
-    log_money_transaction
+    log_money_transaction,
 )
 
 # Setup logger for this module

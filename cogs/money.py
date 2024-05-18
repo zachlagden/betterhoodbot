@@ -20,7 +20,7 @@ from db import money_collection
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
-from helpers.money import (
+from helpers.custom.money import (
     user_balance,
     format_money,
     format_time,
