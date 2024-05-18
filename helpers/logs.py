@@ -75,6 +75,7 @@ RICKLOG_DISCORD = logging.getLogger("rickbot.discord")
 RICKLOG_MAIN = logging.getLogger("rickbot.main")
 RICKLOG_WEBHOOK = logging.getLogger("rickbot.webhook")
 RICKLOG_BG = logging.getLogger("rickbot.bg")
+RICKLOG_HELPERS = logging.getLogger("rickbot.helpers")
 
 # Add handlers to sub-loggers
 # Currently not required as the handlers are added to the main logger
@@ -89,6 +90,8 @@ RICKLOG_WEBHOOK.addHandler(file_handler)
 RICKLOG_WEBHOOK.addHandler(console_handler)
 RICKLOG_BG.addHandler(file_handler)
 RICKLOG_BG.addHandler(console_handler)
+RICKLOG_HELPERS.addHandler(file_handler)
+RICKLOG_HELPERS.addHandler(console_handler)
 """
 
 
@@ -126,3 +129,4 @@ if __name__ == "__main__":
     RICKLOG_MAIN.warning("This is a warning message from the main sub-logger.")
     RICKLOG_WEBHOOK.error("This is an error message from the webhook sub-logger.")
     RICKLOG_BG.critical("This is a critical message from the background sub-logger.")
+    RICKLOG_HELPERS.info("This is an info message from the helpers sub-logger.")
