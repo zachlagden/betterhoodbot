@@ -21,7 +21,7 @@ from helpers.errors import handle_error
 from config import CONFIG
 
 
-class ManagementCog(commands.Cog):
+class RickBot_BotUtilsCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -131,4 +131,4 @@ class ManagementCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(ManagementCog(bot))
+    await bot.add_cog(RickBot_BotUtilsCommands(bot))
