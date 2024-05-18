@@ -13,6 +13,7 @@ import os
 import random
 import string
 import traceback
+import requests
 
 # Third-party libraries
 import discord
@@ -21,6 +22,33 @@ from discord.ext import commands
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR
 from helpers.logs import RICKLOG_MAIN
+
+# Config
+from config import CONFIG
+
+PASTEBIN_API_KEY = CONFIG["pastebin"]["api_key"]
+PASTEBIN_API_URL = "https://pastebin.com/api/api_post.php"
+
+
+def upload_to_pastebin(error_file_path):
+    with open(error_file_path, "r") as file:
+        content = file.read()
+
+    data = {
+        "api_dev_key": PASTEBIN_API_KEY,
+        "api_option": "paste",
+        "api_paste_code": content,
+        "api_paste_private": "1",  # 0=public, 1=unlisted, 2=private
+        "api_paste_name": os.path.basename(error_file_path),
+        "api_paste_expire_date": "10M",  # Expire in 10 minutes
+    }
+
+    response = requests.post(PASTEBIN_API_URL, data=data)
+    if response.status_code == 200:
+        return response.text
+    else:
+        RICKLOG_MAIN.error(f"Failed to upload to Pastebin: {response.status_code}")
+        return None
 
 
 async def handle_error(ctx: commands.Context, error: Exception):
@@ -149,6 +177,15 @@ async def handle_error(ctx: commands.Context, error: Exception):
                 "\n\n----------------------------------------------------\nTraceback\n----------------------------------------------------\n\n"
             )
             f.write(traceback.format_exc())
+
+        pastebin_link = upload_to_pastebin(error_file)
+
+        if pastebin_link:
+            embed.add_field(
+                name="Error Log",
+                value=f"[View on Pastebin]({pastebin_link})",
+                inline=False,
+            )
 
         RICKLOG_MAIN.error(
             f"An error occurred while running the command: {error}\nError log created at {error_file}"
