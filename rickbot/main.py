@@ -9,7 +9,7 @@ This is the main application file for RickBot.
 from datetime import datetime
 import asyncio
 import logging
-import os
+import glob
 
 # Third-party libraries
 from termcolor import colored
@@ -74,12 +74,20 @@ class RickBot(commands.Bot):
         await self.load_cogs()
 
     async def load_cogs(self):
-        cog_folder = "cogs"
-        for filename in os.listdir(cog_folder):
-            if filename.endswith(".py") and not filename.startswith("_"):
-                cog_name = f"{cog_folder}.{filename[:-3]}"
-                await self.load_extension(cog_name)
-                RICKLOG_MAIN.info(f"Loaded cog: {cog_name}")
+        for cog_folder in glob.glob("cogs/*"):
+            cogs_loaded_from_this_folder = 0
+            if not cog_folder.startswith("_"):
+                for filename in glob.glob(f"{cog_folder}/*.py"):
+                    if not filename.startswith("_"):
+                        cog_name = f"{filename[:-3].replace('/', '.')}"
+                        await self.load_extension(cog_name)
+                        cogs_loaded_from_this_folder += 1
+
+                        RICKLOG_MAIN.debug(f"Loaded cog: {cog_name}")
+
+            RICKLOG_MAIN.info(
+                f"Loaded cog folder: {cog_folder} ({cogs_loaded_from_this_folder} cogs)"
+            )
 
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=RickContext)
