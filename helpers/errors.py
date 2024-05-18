@@ -23,9 +23,6 @@ from discord.ext import commands
 from helpers.colors import ERROR_EMBED_COLOR
 from helpers.logs import RICKLOG_MAIN
 
-# Config
-from config import CONFIG
-
 
 PASTE_BASE_URL = "https://paste.zachlagden.uk"
 PASTE_DOCUMENTS_URL = f"{PASTE_BASE_URL}/documents"
@@ -116,13 +113,24 @@ async def handle_error(ctx: commands.Context, error: Exception):
 
         await ctx.reply(embed=embed, mention_author=False)
 
+    elif isinstance(error, OverflowError):
+        embed = discord.Embed(
+            title="Error",
+            description="The number you entered is too large.",
+            color=ERROR_EMBED_COLOR,
+        )
+
+        await ctx.reply(embed=embed, mention_author=False)
+
     else:
         # Generate a random error ID
         error_id = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
         embed = discord.Embed(
             title="An Unexpected Error has occurred",
-            description="You should feel special, this doesn't often happen.\n\nThe developer has been notified, and a fix should be out soon.\nIf no fix has been released after a while please contact the developer and provide the below Error ID.",
+            description="You should feel special, this doesn't often happen.\n\nThe developer has been notified, "
+                        "and a fix should be out soon.\nIf no fix has been released after a while please contact the "
+                        "developer and provide the below Error ID.",
             timestamp=datetime.now(),
             color=ERROR_EMBED_COLOR,
         )
@@ -154,7 +162,9 @@ async def handle_error(ctx: commands.Context, error: Exception):
 
         with open(error_file, "w+") as f:
             f.write(
-                "Hello! An error occurred during the running of RickBot.\nThis is most likely a serious error, so please investigate it.\nIf you find this errors has occurred due to an issue with the original code, please contact the developer.\nOtherwise, you're on your own. Good luck!\n\n"
+                "Hello! An error occurred during the running of RickBot.\nThis is most likely a serious error, "
+                "so please investigate it.\nIf you find this errors has occurred due to an issue with the original "
+                "code, please contact the developer.\nOtherwise, you're on your own. Good luck!\n\n"
             )
             f.write(f"Error: {error}\n")
             f.write(f"Error ID: {error_id}\n")
@@ -164,9 +174,9 @@ async def handle_error(ctx: commands.Context, error: Exception):
             f.write(f"Guild: {ctx.guild}\n")
             f.write(f"Channel: {ctx.channel}\n")
             f.write(f"Time: {datetime.now()}\n")
-            f.write(f"Stack Trace: {error.original}\n")
             f.write(
-                "\n\n----------------------------------------------------\nTraceback\n----------------------------------------------------\n\n\n"
+                "\n\n----------------------------------------------------\nTraceback\n"
+                "----------------------------------------------------\n\n\n"
             )
             f.write(traceback.format_exc())
 
