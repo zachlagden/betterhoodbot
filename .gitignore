@@ -166,5 +166,6 @@ cython_debug/
 .idea/
 
 # Project Specific
-/config.py
 errors/*.*
+config.json
+customconfig.json
