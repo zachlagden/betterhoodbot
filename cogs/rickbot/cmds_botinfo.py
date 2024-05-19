@@ -22,18 +22,55 @@ from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 # Config
 from config import CONFIG
 
+# Custom Exceptions
+
+
+class GitHubAPIError(Exception):
+    """
+    Raised when there is an error with the GitHub API or the supplied link.
+    """
+
+    pass
+
 
 class RickBot_BotInfoCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.GITHUB_API = (
+        config_repo_link = (
             CONFIG["repo"]["url"]
             if "repo" in CONFIG
             and "url" in CONFIG["repo"]
             and CONFIG["repo"]["url"] != ""
             else None
         )
+
+        # Check if the link is a valid GitHub API link
+
+        if not config_repo_link:
+            return
+
+        if not config_repo_link.startswith("https://github.com/"):
+            raise GitHubAPIError("The provided link is not a valid GitHub repo link.")
+
+        # Change the repo link to the API link
+        # Extract the username and repo name
+        try:
+            username, repo_name = config_repo_link.split("github.com/")[-1].split("/")
+        except ValueError:
+            raise GitHubAPIError("The provided link is not a valid GitHub repo link.")
+
+        # Test access to the API
+        test_api = requests.get(
+            f"https://api.github.com/repos/{username}/{repo_name}/commits"
+        )
+
+        if test_api.status_code != 200:
+            raise GitHubAPIError(
+                "The provided link may not be a valid GitHub repo link or the API may be down.\nPlease check the link and try again.\nYour repo may be private, in which case you will need to make it public."
+            )
+
+        self.GITHUB_API = f"https://api.github.com/repos/{username}/{repo_name}/commits"
 
     def botownercheck(ctx):
         return ctx.author.id in CONFIG["devs"]
