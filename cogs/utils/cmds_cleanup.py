@@ -208,9 +208,11 @@ class Utils_CleanupCommands(commands.Cog):
                 color=MAIN_EMBED_COLOR,
             )
 
-        embed.set_footer(text=f"Cleanup Utility | {ctx.bot.user.name}")
+        embed.set_footer(
+            text=f"Cleanup Utility | {ctx.bot.user.name} | Deleting this message after 10s"
+        )
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, delete_after=10)
 
     @_bot_cleanup.error
     async def _bot_cleanup_error(self, ctx: commands.Context, error):
