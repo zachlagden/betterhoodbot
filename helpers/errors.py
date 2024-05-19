@@ -9,11 +9,12 @@ This is a helper for handling all discord.py related errors.
 
 # Python standard library
 from datetime import datetime
+from requests.auth import HTTPBasicAuth
 import os
 import random
+import requests
 import string
 import traceback
-import requests
 
 # Third-party libraries
 import discord
@@ -23,19 +24,27 @@ from discord.ext import commands
 from helpers.colors import ERROR_EMBED_COLOR
 from helpers.logs import RICKLOG_MAIN
 
-
-PASTE_BASE_URL = "https://paste.zachlagden.uk"
-PASTE_DOCUMENTS_URL = f"{PASTE_BASE_URL}/documents"
+# Config
+from config import CUSTOM_CONFIG
 
 
 def upload_to_paste(error_file_path):
+    base_url = CUSTOM_CONFIG["apis"]["zl_paste"]["url"]
+    paste_route = CUSTOM_CONFIG["apis"]["zl_paste"]["routes"]["paste"]
+    auth = CUSTOM_CONFIG["apis"]["zl_paste"]["auth"]
+    documents_url = f"{base_url}{paste_route}"
+
     with open(error_file_path, "r") as file:
         content = file.read()
 
-    response = requests.post(PASTE_DOCUMENTS_URL, data=content)
+    response = requests.post(
+        documents_url,
+        data=content,
+        auth=HTTPBasicAuth(auth["username"], auth["password"]),
+    )
 
     if response.status_code == 200:
-        return f"{PASTE_BASE_URL}/{response.json()['key']}"
+        return f"{base_url}/{response.json()['key']}"
     else:
         RICKLOG_MAIN.critical(f"Failed to upload to Paste: {response.status_code}")
         RICKLOG_MAIN.exception(response.text)
@@ -129,8 +138,8 @@ async def handle_error(ctx: commands.Context, error: Exception):
         embed = discord.Embed(
             title="An Unexpected Error has occurred",
             description="You should feel special, this doesn't often happen.\n\nThe developer has been notified, "
-                        "and a fix should be out soon.\nIf no fix has been released after a while please contact the "
-                        "developer and provide the below Error ID.",
+            "and a fix should be out soon.\nIf no fix has been released after a while please contact the "
+            "developer and provide the below Error ID.",
             timestamp=datetime.now(),
             color=ERROR_EMBED_COLOR,
         )
