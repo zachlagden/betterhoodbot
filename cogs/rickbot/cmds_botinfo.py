@@ -14,6 +14,7 @@ from discord_timestamps import format_timestamp, TimestampType
 from discord.ext import commands
 import discord
 import requests
+import json
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
@@ -65,7 +66,17 @@ class RickBot_BotInfoCommands(commands.Cog):
             await ctx.message.reply(embed=embed, mention_author=False)
             return
 
-        data = query.json()
+        try:
+            data = query.json()
+        except json.JSONDecodeError:
+            embed = discord.Embed(
+                title="Error",
+                description="I'm sorry, there was an error fetching the latest commits. Please try again later.\nIf the problem persists, please contact the bot owner.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+            return
 
         if not isinstance(data, list):
             embed = discord.Embed(
@@ -76,6 +87,24 @@ class RickBot_BotInfoCommands(commands.Cog):
 
             await ctx.message.reply(embed=embed, mention_author=False)
             return
+
+        # Ensure all required information is present
+        for commit in data:
+            if (
+                "sha" not in commit
+                or "commit" not in commit
+                or "author" not in commit
+                or "url" not in commit
+                or "html_url" not in commit
+            ):
+                embed = discord.Embed(
+                    title="Error",
+                    description="I'm sorry, there was an error fetching the latest commits. Please try again later.\nIf the problem persists, please contact the bot owner.",
+                    color=ERROR_EMBED_COLOR,
+                )
+
+                await ctx.message.reply(embed=embed, mention_author=False)
+                return
 
         # Sort the commits by date (newest first)
         sorted_commits = sorted(
