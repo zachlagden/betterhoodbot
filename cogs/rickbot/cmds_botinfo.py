@@ -8,7 +8,6 @@ as well as a leaderboard command that shows the top 10 users with the most n-wor
 
 # Python standard library
 from datetime import datetime
-import json
 
 # Third-party libraries
 from discord_timestamps import format_timestamp, TimestampType
@@ -18,7 +17,6 @@ import requests
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
-from helpers.errors import handle_error
 
 # Config
 from config import CONFIG
@@ -29,17 +27,31 @@ class RickBot_BotInfoCommands(commands.Cog):
         self.bot = bot
 
         self.GITHUB_API = (
-            "https://api.github.com/repos/zachlagden/betterhoodbot/commits"
+            CONFIG["repo"]["url"]
+            if "repo" in CONFIG
+            and "url" in CONFIG["repo"]
+            and CONFIG["repo"]["url"] != ""
+            else None
         )
 
     def botownercheck(ctx):
         return ctx.author.id in CONFIG["devs"]
 
     @commands.command(name="updates")
-    async def updates(self, ctx):
+    async def _updates(self, ctx):
         """
         Check github for the latest commits, provides the last 5 along with other relevant information.
         """
+
+        if self.GITHUB_API is None:
+            embed = discord.Embed(
+                title="Sorry!",
+                description="This command is disabled.",
+                color=ERROR_EMBED_COLOR,
+            )
+
+            await ctx.message.reply(embed=embed, mention_author=False)
+            return
 
         query = requests.get(self.GITHUB_API)
 
