@@ -187,7 +187,10 @@ async def handle_error(ctx: commands.Context, error: Exception):
                 "\n\n----------------------------------------------------\nTraceback\n"
                 "----------------------------------------------------\n\n\n"
             )
-            f.write(traceback.format_exc())
+
+            tb = traceback.format_tb(error.original.__traceback__)
+            tb = "".join(tb)
+            f.write(tb)
 
         paste_link = upload_to_paste(error_file)
 
