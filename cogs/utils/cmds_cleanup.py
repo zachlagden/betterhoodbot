@@ -78,18 +78,17 @@ class Utils_CleanupCommands(commands.Cog):
         to_delete_14_days_old = []
 
         async for message in query:
+            if message == ctx.message:
+                continue
+
             if message.author.bot or message.author == self.bot.user:
                 to_bulk_delete.append(message)
-                continue
             elif message.content.startswith(tuple(self.list_of_common_prefixes)):
                 to_bulk_delete.append(message)
-                continue
             elif message.content.startswith("```"):
                 to_bulk_delete.append(message)
-                continue
             elif message.content.startswith("/"):
                 to_bulk_delete.append(message)
-                continue
 
         # Check if message is older than 13 days
         for message in to_bulk_delete:
