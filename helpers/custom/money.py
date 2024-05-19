@@ -22,9 +22,12 @@ from helpers.logs import RICKLOG_HELPERS
 # Database
 from db import money_collection
 
+# Config
+from config import CUSTOM_CONFIG
+
 # Constants
 
-TRANSACTION_LOG_WEBHOOK = "https://discord.com/api/webhooks/1241260726778069052/cTlDzHXTXEDgyF981rqRhJmemLsamAnXC3Y2z0XCSs2XGSDfAtdx1j9uNsog5foLfJPz"
+TRANSACTION_LOG_WEBHOOK = CUSTOM_CONFIG["logging"]["transactions"]["webhook"]
 
 # Error Classes
 
