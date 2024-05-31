@@ -15,13 +15,6 @@ import discord
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
 from helpers.errors import handle_error
-from helpers.custom.money import (
-    user_balance,
-    format_money,
-    format_time,
-    DatabaseImpossibleError,
-    log_money_transaction,
-)
 
 
 class Money_StealCommand(commands.Cog):
