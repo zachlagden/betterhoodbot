@@ -79,7 +79,7 @@ class Money_DailyCommand(commands.Cog):
                 "No webhook URL found for transaction logging. Not logging this transaction."
             )
         else:
-            with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession() as session:
                 webhook: discord.Webhook = discord.Webhook.from_url(
                     webhook_url, session=session
                 )
