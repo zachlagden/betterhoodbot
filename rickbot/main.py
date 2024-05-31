@@ -108,6 +108,11 @@ class RickBot(commands.Bot):
         return await super().get_context(message, cls=RickContext)
 
     async def on_ready(self):
+        # Register commands for the Better Hood server.
+        guild: discord.Guild = discord.Object(id=CONFIG["server_id"])
+        self.tree.copy_global_to(guild=guild)
+        await self.tree.sync(guild=guild)
+
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         RICKLOG_MAIN.info(
             f"RickBot started at {colored(current_time, 'light_cyan', attrs=['bold', 'underline'])}"
