@@ -41,6 +41,7 @@ def rickbot_start_msg(bot: Bot) -> None:
     RICKLOG.info(
         f'Loaded {colored(len(bot.commands), "light_cyan", attrs=["bold", "underline"])} commands.'
     )
+
     RICKLOG.info(
         f'Loaded {colored(len(bot.cogs), "light_cyan", attrs=["bold", "underline"])} cogs.'
     )
