@@ -7,17 +7,20 @@ This cog is for the deposit command, which allows users to deposit money into th
 
 # Third-party libraries
 from discord.ext import commands
+import aiohttp
 import discord
 
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.custom.format import format_money
 from helpers.errors import handle_error
-from helpers.custom.money import (
-    user_balance,
-    format_money,
-    log_money_transaction,
-    DatabaseImpossibleError,
-)
+from helpers.logs import RICKLOG
+
+# Database
+from db import money_collection
+
+# Config
+from config import CUSTOM_CONFIG
 
 
 class Money_DepositCommand(commands.Cog):
@@ -39,35 +42,65 @@ class Money_DepositCommand(commands.Cog):
             await ctx.message.reply(embed=embed, mention_author=False)
             return
 
-        query = user_balance(ctx.author.id)
-        if not query:
-            raise DatabaseImpossibleError(
-                "The user's balance could not be retrieved from the database."
-            )
+        query = money_collection.find_one({"uid": ctx.author.id})
+        user = query if query else {}
 
-        wallet, _ = query
-        if wallet < amount:
+        if user.get("wallet", 0) < amount:
             embed = discord.Embed(
                 title="Error",
-                description="Insufficient funds in your wallet.",
+                description="You do not have enough money in your wallet to deposit that amount.",
                 color=ERROR_EMBED_COLOR,
             )
             embed.set_footer(text="Better Hood Money")
             await ctx.message.reply(embed=embed, mention_author=False)
             return
 
-        user_balance(ctx.author.id, adjust_bank=amount, adjust_wallet=-amount)
-
-        await log_money_transaction(
-            [
-                {
-                    "users": {"from": ctx.author, "to": ctx.author},
-                    "movement": {"from": "wallet", "to": "bank"},
-                    "amount": amount,
-                    "reason": "Deposit",
-                }
-            ]
+        money_collection.update_one(
+            {"uid": ctx.author.id},
+            {"$inc": {"wallet": -amount, "bank": amount}},
+            upsert=True,
         )
+
+        try:
+            webhook_url = CUSTOM_CONFIG["logging"]["transactions"]["webhook"]
+        except KeyError:
+            RICKLOG.critical(
+                "No webhook URL found for transaction logging. Not logging this transaction."
+            )
+        else:
+            with aiohttp.ClientSession() as session:
+                webhook: discord.Webhook = discord.Webhook.from_url(
+                    webhook_url, session=session
+                )
+
+                webhook_embed = discord.Embed(
+                    title="Deposit",
+                    description=f"{ctx.author.mention} deposited {format_money(amount)} into their bank.",
+                    color=ERROR_EMBED_COLOR,
+                )
+
+                webhook_embed.add_field(
+                    name="Original Wallet", value=format_money(user.get("wallet", 0))
+                )
+                webhook_embed.add_field(
+                    name="New Wallet",
+                    value=format_money(user.get("wallet", 0) - amount),
+                )
+
+                webhook_embed.add_field(
+                    name="Original Bank", value=format_money(user.get("bank", 0))
+                )
+                webhook_embed.add_field(
+                    name="New Bank", value=format_money(user.get("bank", 0) + amount)
+                )
+
+                webhook_embed.set_footer(text="Better Hood Money")
+
+                await webhook.send(
+                    username="Better Hood Money Transactions",
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=webhook_embed,
+                )
 
         embed = discord.Embed(
             title="Success",

@@ -7,18 +7,20 @@ This cog is for the give command, which allows users to give money to another us
 
 # Third-party libraries
 from discord.ext import commands
+import aiohttp
 import discord
 
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.custom.format import format_money, format_time
 from helpers.errors import handle_error
-from helpers.custom.money import (
-    user_balance,
-    format_money,
-    format_time,
-    log_money_transaction,
-    DatabaseImpossibleError,
-)
+from helpers.logs import RICKLOG
+
+# Database
+from db import money_collection
+
+# Config
+from config import CUSTOM_CONFIG
 
 
 class Money_GiveCommand(commands.Cog):
@@ -40,17 +42,13 @@ class Money_GiveCommand(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        query = user_balance(ctx.author.id)
-        if not query:
-            raise DatabaseImpossibleError(
-                "The user's balance could not be retrieved from the database."
-            )
+        query = money_collection.find_one({"uid": ctx.author.id})
+        user = query if query else {}
 
-        donor_wallet, _ = query
-        if donor_wallet < amount:
+        if user.get("wallet", 0) < amount:
             embed = discord.Embed(
                 title="Error",
-                description="Insufficient funds in your wallet.",
+                description="You do not have enough money in your wallet to give that amount.",
                 color=ERROR_EMBED_COLOR,
             )
             embed.set_footer(text="Better Hood Money")
@@ -58,19 +56,65 @@ class Money_GiveCommand(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        user_balance(ctx.author.id, adjust_wallet=-amount)
-        user_balance(member.id, adjust_wallet=amount)
+        query = money_collection.find_one({"uid": member.id})
+        recieveing_user = query if query else {}
 
-        await log_money_transaction(
-            [
-                {
-                    "users": {"from": ctx.author, "to": member},
-                    "movement": {"from": "wallet", "to": "wallet"},
-                    "amount": amount,
-                    "reason": "Gift",
-                }
-            ]
+        money_collection.update_one(
+            {"uid": ctx.author.id},
+            {"$inc": {"wallet": -amount}},
         )
+
+        money_collection.update_one(
+            {"uid": member.id},
+            {"$inc": {"wallet": amount}},
+            upsert=True,
+        )
+
+        try:
+            webhook_url = CUSTOM_CONFIG["logging"]["transactions"]["webhook"]
+        except KeyError:
+            RICKLOG.critical(
+                "No webhook URL found for transaction logging. Not logging this transaction."
+            )
+        else:
+            with aiohttp.ClientSession() as session:
+                webhook: discord.Webhook = discord.Webhook.from_url(
+                    webhook_url, session=session
+                )
+
+                webhook_embed = discord.Embed(
+                    title="Wallet Transaction",
+                    description=f"{ctx.author.mention} has given {member.mention} {format_money(amount)}.",
+                    color=ERROR_EMBED_COLOR,
+                )
+
+                webhook_embed.add_field(
+                    name="Sender's Original Wallet",
+                    value=format_money(user.get("wallet", 0)),
+                )
+
+                webhook_embed.add_field(
+                    name="Sender's New Wallet",
+                    value=format_money(user.get("wallet", 0) - amount),
+                )
+
+                webhook_embed.add_field(
+                    name="Reciever's Original Wallet",
+                    value=format_money(recieveing_user.get("wallet", 0)),
+                )
+
+                webhook_embed.add_field(
+                    name="Reciever's New Wallet",
+                    value=format_money(recieveing_user.get("wallet", 0) + amount),
+                )
+
+                webhook_embed.set_footer(text="Better Hood Money")
+
+                await webhook.send(
+                    username="Better Hood Money Transactions",
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=webhook_embed,
+                )
 
         embed = discord.Embed(
             title="Success",

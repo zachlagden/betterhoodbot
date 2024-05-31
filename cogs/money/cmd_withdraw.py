@@ -5,22 +5,22 @@ You may not use, copy, distribute, modify, or sell this code without the express
 This cog is for the withdraw command, which allows users to withdraw money from their bank.
 """
 
-# Python standard library
-import logging
-
 # Third-party libraries
 from discord.ext import commands
+import aiohttp
 import discord
 
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.custom.format import format_money, format_time
 from helpers.errors import handle_error
-from helpers.custom.money import (
-    user_balance,
-    format_money,
-    log_money_transaction,
-    DatabaseImpossibleError,
-)
+from helpers.logs import RICKLOG
+
+# Database
+from db import money_collection
+
+# Config
+from config import CUSTOM_CONFIG
 
 
 class Money_WithdrawCommand(commands.Cog):
@@ -42,35 +42,59 @@ class Money_WithdrawCommand(commands.Cog):
             await ctx.message.reply(embed=embed, mention_author=False)
             return
 
-        query = user_balance(ctx.author.id)
-        if not query:
-            raise DatabaseImpossibleError(
-                "The user's balance could not be retrieved from the database."
-            )
+        query = money_collection.find_one({"uid": ctx.author.id})
+        user = query if query else {}
 
-        _, bank = query
-        if bank < amount:
+        if user.get("bank", 0) < amount:
             embed = discord.Embed(
                 title="Error",
-                description="Insufficient funds in your bank.",
+                description="You do not have enough money in your bank to withdraw that amount.",
                 color=ERROR_EMBED_COLOR,
             )
             embed.set_footer(text="Better Hood Money")
             await ctx.message.reply(embed=embed, mention_author=False)
             return
 
-        user_balance(ctx.author.id, adjust_wallet=amount, adjust_bank=-amount)
-
-        await log_money_transaction(
-            [
-                {
-                    "users": {"from": ctx.author.id, "to": ctx.author.id},
-                    "movement": {"from": "bank", "to": "wallet"},
-                    "amount": amount,
-                    "reason": "Withdrawal",
-                }
-            ]
+        money_collection.update_one(
+            {"uid": ctx.author.id},
+            {"$inc": {"wallet": amount, "bank": -amount}},
         )
+
+        try:
+            webhook_url = CUSTOM_CONFIG["logging"]["transactions"]["webhook"]
+        except KeyError:
+            RICKLOG.critical(
+                "No webhook URL found for transaction logging. Not logging this transaction."
+            )
+        else:
+            with aiohttp.ClientSession() as session:
+                webhook: discord.Webhook = discord.Webhook.from_url(
+                    webhook_url, session=session
+                )
+
+                webhook_embed = discord.Embed(
+                    title="Withdrawal",
+                    description=f"{ctx.author.mention} has withdrawn {format_money(amount)} from their bank.",
+                    color=ERROR_EMBED_COLOR,
+                )
+
+                webhook_embed.add_field(
+                    name="Original Bank",
+                    value=format_money(user.get("bank", 0)),
+                )
+
+                webhook_embed.add_field(
+                    name="New Bank",
+                    value=format_money(user.get("bank", 0) - amount),
+                )
+
+                webhook_embed.set_footer(text="Better Hood Money")
+
+                await webhook.send(
+                    username="Better Hood Money Transactions",
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=webhook_embed,
+                )
 
         embed = discord.Embed(
             title="Success",

@@ -14,8 +14,12 @@ import discord
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
+from helpers.custom.format import format_money
 from helpers.errors import handle_error
-from helpers.custom.money import user_balance, format_money, DatabaseImpossibleError
+from helpers.logs import RICKLOG_CMDS
+
+# Database
+from db import money_collection
 
 
 class Money_BalanceCommand(commands.Cog):
@@ -30,16 +34,21 @@ class Money_BalanceCommand(commands.Cog):
         ctx: commands.Context,
         member: Union[discord.Member, discord.User, None] = None,
     ):
-        """Displays the balance of the specified user, or the calling user if none specified."""
-        member = member or ctx.author
-        query = user_balance(member.id)
-        if not query:
-            raise DatabaseImpossibleError(
-                "The user's balance could not be retrieved from the database."
-            )
+        """
+        Displays the balance of the specified user, or the calling user if none specified.
+        """
 
-        wallet, bank = query
-        title = "Your balance:" if member == ctx.author else f"{member}'s balance:"
+        # Get the user's wallet balance
+        query = money_collection.find_one(
+            {"uid": ctx.author.id if member is None else member.id}
+        )
+
+        if not query:
+            bank, wallet = 0, 0
+        else:
+            bank, wallet = query["bank"], query["wallet"]
+
+        title = "Your balance:" if member is None else f"{member}'s balance:"
         embed = discord.Embed(title=title, color=MAIN_EMBED_COLOR)
         embed.set_author(
             name="💵Better Hood Balance💵",

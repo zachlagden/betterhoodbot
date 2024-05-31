@@ -14,21 +14,15 @@ import discord
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 
+# Config
+from config import CUSTOM_CONFIG
+
 
 class Utils_ColorCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.color_role_ids = {
-            "purple": 1215222975553474576,
-            "blue": 1215222975553474577,
-            "green": 1215222975553474578,
-            "hot pink": 1215222975553474575,
-            "orange": 1215222975553474573,
-            "red": 1215222975553474572,
-            "yellow": 1215222975553474574,
-            "black": 1230536800083120188,
-        }
+        self.color_role_ids = CUSTOM_CONFIG["color_cmd"]["colors"]
 
     def format_color(self, color):
         return f"`{color}` - <@&{self.color_role_ids[color]}>"

@@ -5,23 +5,25 @@ You may not use, copy, distribute, modify, or sell this code without the express
 This cog is for the transfer command, which allows users to transfer money to another user's bank.
 """
 
-# Python standard library
+# Python Standard library
 import asyncio
 
 # Third-party libraries
 from discord.ext import commands
+import aiohttp
 import discord
 
 # Helper functions
-from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
+from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR, MAIN_EMBED_COLOR
+from helpers.custom.format import format_money, format_time
 from helpers.errors import handle_error
-from helpers.custom.money import (
-    user_balance,
-    format_money,
-    log_money_transaction,
-    format_time,
-    DatabaseImpossibleError,
-)
+from helpers.logs import RICKLOG
+
+# Database
+from db import money_collection
+
+# Config
+from config import CUSTOM_CONFIG
 
 
 class Money_TransferCommand(commands.Cog):
@@ -47,25 +49,25 @@ class Money_TransferCommand(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        query = user_balance(ctx.author.id)
-        if not query:
-            raise DatabaseImpossibleError(
-                "The user's balance could not be retrieved from the database."
-            )
+        query = money_collection.find_one({"uid": ctx.author.id})
+        user = query if query else {}
 
-        _, sender_bank = query
-        tax = int(amount * 0.10)
-        net_amount = amount - tax
-        if sender_bank < amount:
+        query = money_collection.find_one({"uid": member.id})
+        recieving_user = query if query else {}
+
+        if user.get("bank", 0) < amount:
             embed = discord.Embed(
                 title="Error",
-                description="Insufficient funds in your bank.",
+                description="You do not have enough money in your bank to transfer that amount.",
                 color=ERROR_EMBED_COLOR,
             )
             embed.set_footer(text="Better Hood Money")
             await ctx.message.reply(embed=embed, mention_author=False)
             ctx.command.reset_cooldown(ctx)
             return
+
+        tax = amount * 0.1
+        net_amount = amount - tax
 
         embed = discord.Embed(
             title="Transfer Confirmation",
@@ -89,19 +91,64 @@ class Money_TransferCommand(commands.Cog):
                 "reaction_add", timeout=30.0, check=check
             )
             if str(reaction.emoji) == "✅":
-                user_balance(ctx.author.id, adjust_bank=-amount)
-                user_balance(member.id, adjust_bank=net_amount)
-
-                await log_money_transaction(
-                    [
-                        {
-                            "users": {"from": ctx.author, "to": member},
-                            "movement": {"from": "bank", "to": "bank"},
-                            "amount": amount,
-                            "reason": "Transfer",
-                        }
-                    ]
+                money_collection.update_one(
+                    {"uid": ctx.author.id},
+                    {"$inc": {"bank": -amount}},
                 )
+
+                money_collection.update_one(
+                    {"uid": member.id},
+                    {"$inc": {"bank": net_amount}},
+                    upsert=True,
+                )
+
+                try:
+                    webhook_url = CUSTOM_CONFIG["logging"]["transactions"]["webhook"]
+                except KeyError:
+                    RICKLOG.critical(
+                        "No webhook URL found for transaction logging. Not logging this transaction."
+                    )
+                else:
+                    with aiohttp.ClientSession() as session:
+                        webhook: discord.Webhook = discord.Webhook.from_url(
+                            webhook_url, session=session
+                        )
+
+                        webhook_embed = discord.Embed(
+                            title="Bank Transfer",
+                            description=f"{ctx.author.mention} has transferred {format_money(amount)} to {member.mention}.",
+                            color=ERROR_EMBED_COLOR,
+                        )
+
+                        webhook_embed.add_field(
+                            name="Sender's Original Bank",
+                            value=format_money(user.get("bank", 0)),
+                        )
+
+                        webhook_embed.add_field(
+                            name="Sender's New Bank",
+                            value=format_money(user.get("bank", 0) - amount),
+                        )
+
+                        webhook_embed.add_field(
+                            name="Recipient's Original Bank",
+                            value=format_money(recieving_user.get("bank", 0)),
+                        )
+
+                        webhook_embed.add_field(
+                            name="Recipient's New Bank",
+                            value=format_money(
+                                recieving_user.get("bank", 0) + net_amount
+                            ),
+                        )
+
+                        webhook_embed.set_footer(text="Better Hood Money")
+
+                        await webhook.send(
+                            username="Better Hood Money Transactions",
+                            avatar_url=self.bot.user.avatar.url,
+                            embed=webhook_embed,
+                        )
 
                 confirmation_embed = discord.Embed(
                     title="Transfer Successful",
