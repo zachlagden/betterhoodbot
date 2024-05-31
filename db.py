@@ -20,6 +20,7 @@ bot_db = client["bot"]
 messages_collection = bot_db["messages"]
 money_collection = bot_db["money"]
 invites_collection = bot_db["invites"]
+users_collection = bot_db["users"]
 
 
 def get_mongo_client():
