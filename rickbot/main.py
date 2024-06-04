@@ -30,7 +30,7 @@ from helpers.rickbot import rickbot_start_msg
 from helpers.errors import handle_error
 
 # Configuration file
-from config import CONFIG
+from helpers.config import CONFIG
 
 # Configurations (Not usally changed, so not in the config file)
 

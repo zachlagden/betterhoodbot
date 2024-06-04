@@ -19,7 +19,7 @@ from helpers.errors import handle_error
 from helpers.logs import RICKLOG_CMDS
 
 # Database
-from db import money_collection
+from helpers.db import money_collection
 
 
 class Money_BalanceCommand(commands.Cog):

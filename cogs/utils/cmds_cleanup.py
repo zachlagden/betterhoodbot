@@ -180,7 +180,6 @@ class Utils_CleanupCommands(commands.Cog):
                 await prompt_message.delete()
 
                 if str(reaction.emoji) == "✅":
-
                     for message in to_delete_14_days_old:
                         message: discord.Message
                         try:

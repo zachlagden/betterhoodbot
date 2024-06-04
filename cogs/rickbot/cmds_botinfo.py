@@ -20,7 +20,7 @@ import json
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 
 # Config
-from config import CONFIG
+from helpers.config import CONFIG
 
 # Custom Exceptions
 

@@ -12,7 +12,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
 # Import configuration
-from config import CONFIG
+from helpers.config import CONFIG
 
 client = MongoClient(CONFIG["mongo"]["uri"], server_api=ServerApi("1"))
 

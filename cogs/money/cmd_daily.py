@@ -15,7 +15,7 @@ import aiohttp
 import discord
 
 # Import database
-from db import money_collection
+from helpers.db import money_collection
 
 # Helper functions
 from helpers.colors import ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR
@@ -23,7 +23,7 @@ from helpers.custom.format import format_money
 from helpers.logs import RICKLOG
 
 # Config
-from config import CUSTOM_CONFIG
+from helpers.config import CUSTOM_CONFIG
 
 
 class Money_DailyCommand(commands.Cog):

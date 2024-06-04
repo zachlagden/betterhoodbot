@@ -20,10 +20,10 @@ from helpers.errors import handle_error
 from helpers.logs import RICKLOG
 
 # Database
-from db import money_collection
+from helpers.db import money_collection
 
 # Config
-from config import CUSTOM_CONFIG
+from helpers.config import CUSTOM_CONFIG
 
 
 class Money_TransferCommand(commands.Cog):

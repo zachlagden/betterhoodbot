@@ -15,7 +15,7 @@ from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 
 # Config
-from config import CUSTOM_CONFIG
+from helpers.config import CUSTOM_CONFIG
 
 
 class Utils_ColorCommand(commands.Cog):

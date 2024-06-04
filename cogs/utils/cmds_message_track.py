@@ -13,7 +13,7 @@ from discord.ext import commands
 import discord
 
 # Import database
-from db import messages_collection
+from helpers.db import messages_collection
 
 # Helper functions
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR, SUCCESS_EMBED_COLOR

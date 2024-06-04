@@ -5,7 +5,7 @@ from datetime import datetime
 # Helper functions and constants
 from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
-from db import invites_collection, users_collection
+from helpers.db import invites_collection, users_collection
 
 
 class Utils_InviteTrackerCommands(commands.Cog):

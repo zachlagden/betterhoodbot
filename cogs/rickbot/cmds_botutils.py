@@ -18,7 +18,7 @@ from helpers.colors import MAIN_EMBED_COLOR, ERROR_EMBED_COLOR
 from helpers.errors import handle_error
 
 # Config
-from config import CONFIG
+from helpers.config import CONFIG
 
 
 class RickBot_BotUtilsCommands(commands.Cog):

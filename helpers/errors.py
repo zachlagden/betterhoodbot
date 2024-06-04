@@ -25,7 +25,7 @@ from helpers.colors import ERROR_EMBED_COLOR
 from helpers.logs import RICKLOG_MAIN
 
 # Config
-from config import CUSTOM_CONFIG
+from helpers.config import CUSTOM_CONFIG
 
 
 def upload_to_paste(error_file_path):
