@@ -11,7 +11,7 @@ RickBot is RickBot, and RickBot is perfect. No need to change anything.
 # Import the required modules
 
 # Python standard library
-import logging
+import glob
 
 # Third-party modules
 from termcolor import colored
@@ -23,6 +23,22 @@ from discord.ext.commands import Bot
 from helpers.logs import RICKLOG
 
 # Functions
+
+
+def display_error_logs_if_found_in_error_folder() -> None:
+    errors = 0
+    for _ in glob.glob("errors/*.txt"):  # type: ignore
+        errors += 1
+
+    print("\n")
+
+    if errors > 0:
+        RICKLOG.critical(
+            f"Found {colored(errors, 'red', attrs=['bold', 'underline'])} unchecked error logs in the errors folder. If you have check these errors please delete them."
+        )
+        RICKLOG.info(
+            f"Please check the error logs in the errors folder for more information."
+        )
 
 
 def rickbot_start_msg(bot: Bot) -> None:
@@ -45,6 +61,8 @@ def rickbot_start_msg(bot: Bot) -> None:
     RICKLOG.info(
         f'Loaded {colored(len(bot.cogs), "light_cyan", attrs=["bold", "underline"])} cogs.'
     )
+
+    display_error_logs_if_found_in_error_folder()
 
 
 # Constants
